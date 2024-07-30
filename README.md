@@ -6,7 +6,9 @@
 
 ## 安装
 
-[GitHub源](https://raw.githubusercontent.com/OreoProMax/steamgifts-auto-detect/master/dist/steamgifts-auto-detect.min.user.js)：推荐，更新更快，且代码经过压缩，体积更小，执行效率更高。
+[GitHub源](https://raw.githubusercontent.com/OreoProMax/steamgifts-auto-detect/master/dist/steamgifts-auto-detect.min.user.js)：推荐，更新更快，且代码经过压缩，体积更小，执行效率更高。  
+
+[Greasy Fork源](https://update.greasyfork.org/scripts/502133/SteamGifts%20Auto%20Detector.user.js)：如果你的网络环境无法正常访问GitHub，可以选择通过Greasy Fork来安装。
 
 ## License
 
