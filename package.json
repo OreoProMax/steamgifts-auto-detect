@@ -1,7 +1,7 @@
 {
   "name": "steamgifts-auto-detect",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "element-plus": "^2.7.7",
     "vue": "^3.4.27"
   },
   "devDependencies": {
