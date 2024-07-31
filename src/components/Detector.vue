@@ -33,12 +33,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ElLoading, ElMessage, ElNotification } from "element-plus";
-import { onMounted, ref } from "vue";
-
 // $ is the default alias of vite-plugin-monkey/dist/client
 // if you want use 'others', set monkeyConfig.clientAlias='others'
 import { GM } from "$";
+import { ElLoading, ElMessage, ElNotification } from "element-plus";
+import { onMounted, ref } from "vue";
 
 // 项目全局变量
 const LIMITED_STATUS = __LIMITED_STATUS__;
@@ -113,11 +112,10 @@ function determineStatus(document: Document): string {
 /**
  * 通过SteamDB检测游戏状态。
  *
+ * @param {string} link SteamDB链接。
  * @returns {Promise<string>} 包含【目标游戏状态】的Promise。
  */
-async function detectSteamdb(): Promise<string> {
-  const link =
-    "https://steamdb.info/" + type + "/" + id + "/?steamgifts-auto-detect";
+async function detectSteamdb(link: string): Promise<string> {
   GM.openInTab(link);
   loading.setText("正在等待SteamDB检测结果...");
   while (!(await GM.getValue(`${type}_${id}`, null))) {
@@ -133,11 +131,7 @@ async function detectSteamdb(): Promise<string> {
  * @param {boolean} cache 游戏状态是否为从缓存中读取到的。
  * @param {string} customMsg 自定义消息。
  */
-async function setSuccess(
-  status: string,
-  cache: boolean,
-  customMsg: string
-): Promise<void> {
+function setSuccess(status: string, cache: boolean, customMsg: string): void {
   // 设置并缓存游戏状态
   gameStatus.value = status;
   if (!cache) {
@@ -164,6 +158,7 @@ async function setSuccess(
     msg += `状态`;
   }
 
+  // 展示信息
   ElMessage({
     message: msg,
     type: "success",
@@ -231,10 +226,10 @@ async function processSteamLink(link: string): Promise<string> {
     return "error";
   }
 
-  // 2. 检测如果该游戏状态已有缓存，且不为“error”或“正在了解”，则直接使用缓存
+  // 2. 如果该游戏状态已有缓存，且不为“error”或“正在了解”，则直接使用缓存
   const cache = await GM.getValue(`${type}_${id}`, null);
   if (cache && cache !== "error" && cache !== LEARNING_STATUS) {
-    await setSuccess(cache, true, "");
+    setSuccess(cache, true, "");
     return cache;
   }
 
@@ -244,14 +239,20 @@ async function processSteamLink(link: string): Promise<string> {
 
   // 4. 处理sub型商店页面
   if (type === "sub") {
-    // 4.1 确认页面是sub型商店页面
-    if (!steamDocument.querySelector("body.sub")) {
-      setError("sub商店页面检测异常");
-      return "error";
+    // 4.1 如果Steam页面为主页（说明该sub无商店页面），则通过SteamDB检测
+    if (steamDocument.querySelector("body.infinite_scrolling")) {
+      const steamdbLink = `https://steamdb.info/sub/${id}/apps?steamgifts-auto-detect`;
+      const status = await detectSteamdb(steamdbLink);
+      setSuccess(status, false, "");
+      return status;
     }
 
     // 4.2 提取sub中包含的所有app的链接，逐个检测
     const linksElement = steamDocument.querySelectorAll("a.tab_item_overlay");
+    if (linksElement.length === 0) {
+      setError("sub商店页面检测异常");
+      return "error";
+    }
     const links = Array.from(linksElement).map(
       (element) => element.getAttribute("href")!
     );
@@ -290,18 +291,18 @@ async function processSteamLink(link: string): Promise<string> {
 
     // 4.5 只要有一个正常，就认定为正常
     if (results.includes(NORMAL_STATUS)) {
-      await setSuccess(NORMAL_STATUS, false, msg);
+      setSuccess(NORMAL_STATUS, false, msg);
       return NORMAL_STATUS;
     }
 
     // 4.6 只要有一个正在了解，就认定为正在了解
     if (results.includes(LEARNING_STATUS)) {
-      await setSuccess(LEARNING_STATUS, false, msg);
+      setSuccess(LEARNING_STATUS, false, msg);
       return LEARNING_STATUS;
     }
 
     // 4.7 全部受限，才认定为受限
-    await setSuccess(LIMITED_STATUS, false, msg);
+    setSuccess(LIMITED_STATUS, false, msg);
     return LIMITED_STATUS;
   }
 
@@ -331,18 +332,20 @@ async function processSteamLink(link: string): Promise<string> {
 
   // 6. 根据app型商店页面的类型检测游戏状态
   let status;
+  let steamdbLink;
   switch (pageType) {
     // 正常页面：直接检测
     case "app":
       status = determineStatus(steamDocument);
-      await setSuccess(status, false, "");
+      setSuccess(status, false, "");
       return status;
       break;
 
     // 锁区页面：通过SteamDB检测
     case "region_restricted":
-      status = await detectSteamdb();
-      await setSuccess(status, false, "");
+      steamdbLink = `https://steamdb.info/app/${id}?steamgifts-auto-detect`;
+      status = await detectSteamdb(steamdbLink);
+      setSuccess(status, false, "");
       return status;
       break;
 
@@ -366,7 +369,7 @@ async function processSteamLink(link: string): Promise<string> {
         "div.platform>strong"
       )!.textContent!;
       if (bartervgStatus.includes("Banned")) {
-        await setSuccess(LIMITED_STATUS, false, "");
+        setSuccess(LIMITED_STATUS, false, "");
         return LIMITED_STATUS;
       }
       // 如果不包含Banned，那么应该包含Delisted，否则就说明发生了错误
@@ -376,8 +379,9 @@ async function processSteamLink(link: string): Promise<string> {
       }
 
       // D. 如果没被ban，再通过SteamDB检测
-      status = await detectSteamdb();
-      await setSuccess(status, false, "");
+      steamdbLink = `https://steamdb.info/app/${id}?steamgifts-auto-detect`;
+      status = await detectSteamdb(steamdbLink);
+      setSuccess(status, false, "");
       return status;
       break;
   }
