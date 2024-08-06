@@ -128,18 +128,18 @@ async function detectSteamdb(link: string): Promise<string> {
  * 检测成功 - 设置游戏状态和展示信息。
  *
  * @param {string} status 游戏状态。
- * @param {boolean} cache 游戏状态是否为从缓存中读取到的。
+ * @param {boolean} isCache 游戏状态是否为从缓存中读取到的。
  * @param {string} customMsg 自定义消息。
  */
-function setSuccess(status: string, cache: boolean, customMsg: string): void {
+function setSuccess(status: string, isCache: boolean, customMsg: string): void {
   // 设置并缓存游戏状态
   gameStatus.value = status;
-  if (!cache) {
+  if (!isCache) {
     GM.setValue(`${type}_${id}`, status);
   }
 
   // 生成展示信息
-  let msg = cache ? "缓存加载成功 - " : "页面检测成功 - ";
+  let msg = isCache ? "缓存加载成功 - " : "页面检测成功 - ";
   if (customMsg !== "") {
     msg += customMsg;
   } else {
@@ -363,11 +363,21 @@ async function processSteamLink(link: string): Promise<string> {
         setError("Barter.vg页面检测异常");
         return "error";
       }
+      const bartervgStatusElement = bartervgDocument.querySelector(
+        "div.platform>strong"
+      );
+      if (!bartervgStatusElement) {
+        setError(
+          `商店页面已移除，但
+          <a href="${bartervgLink}" style="color: #409eff" target="_blank">Barter.vg</a>
+          尚未更新数据，请手动检查！
+          <!--`
+        );
+        return "error";
+      }
 
       // C. 通过Barter.vg检测游戏是否被ban
-      const bartervgStatus = bartervgDocument.querySelector(
-        "div.platform>strong"
-      )!.textContent!;
+      const bartervgStatus = bartervgStatusElement.textContent!;
       if (bartervgStatus.includes("Banned")) {
         setSuccess(LIMITED_STATUS, false, "");
         return LIMITED_STATUS;
