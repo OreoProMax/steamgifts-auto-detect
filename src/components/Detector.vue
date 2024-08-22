@@ -226,11 +226,18 @@ async function processSteamLink(link: string): Promise<string> {
     return "error";
   }
 
-  // 2. 如果该游戏状态已有缓存，且不为“error”或“正在了解”，则直接使用缓存
+  // 2. 如果该游戏状态已有缓存，则处理缓存
   const cache = await GM.getValue(`${type}_${id}`, null);
-  if (cache && cache !== "error" && cache !== LEARNING_STATUS) {
-    setSuccess(cache, true, "");
-    return cache;
+  if (cache) {
+    // 2.1 如果缓存为“error”或“正在了解”，清除该缓存
+    if (cache !== "error" || cache === LEARNING_STATUS) {
+      GM.deleteValue(`${type}_${id}`);
+    }
+    // 2.2 否则，使用该缓存
+    else {
+      setSuccess(cache, true, "");
+      return cache;
+    }
   }
 
   // 3. 请求Steam页面

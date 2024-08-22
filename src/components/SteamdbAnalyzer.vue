@@ -39,6 +39,7 @@ onMounted(async () => {
     console.log("SteamdbAnalyzer mounted");
   }
 
+  // TODO: 有时候没弹出通知，可能是因为页面还没加载完
   // 1. 检测当前访问是否卡了CF人机验证
   if (document.querySelector("div.cf-error")) {
     setError("请完成Cloudflare人机验证！");

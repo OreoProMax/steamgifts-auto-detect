@@ -14,7 +14,7 @@ export default defineConfig({
         name: SCRIPT_TITLE,
         description:
           "自动检测SteamGifts的Giveaway游戏的状态（正常/受限/正在了解）。",
-        version: "1.2",
+        version: "1.3",
         icon: "https://cdn.steamgifts.com/img/favicon.ico",
         match: [
           "https://www.steamgifts.com/giveaway/*",
