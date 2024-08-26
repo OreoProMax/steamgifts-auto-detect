@@ -230,7 +230,7 @@ async function processSteamLink(link: string): Promise<string> {
   const cache = await GM.getValue(`${type}_${id}`, null);
   if (cache) {
     // 2.1 如果缓存为“error”或“正在了解”，清除该缓存
-    if (cache !== "error" || cache === LEARNING_STATUS) {
+    if (cache === "error" || cache === LEARNING_STATUS) {
       GM.deleteValue(`${type}_${id}`);
     }
     // 2.2 否则，使用该缓存
