@@ -210,7 +210,7 @@ function sleep(ms: number): Promise<void> {
 async function processSteamLink(link: string): Promise<string> {
   // 1. 检测Steam链接类型是app还是sub，并提取出appId/subId
   const matchList = link.match(
-    /https:\/\/store\.steampowered\.com\/(app|sub)\/(\d+)\//
+    /https:\/\/store\.steampowered\.com\/(app|sub)\/(\d+)\?utm_source=SteamGifts/
   );
   if (matchList && matchList.length === 3) {
     type = matchList[1];
